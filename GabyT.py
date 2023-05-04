@@ -1,6 +1,3 @@
-# Instalar python-telegram-bot: 
-# pip install python-telegram-bot
-
 import logging
 from datetime import date
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -10,7 +7,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Colocar aquí tu token de API de Telegram
-API_TOKEN = "YOUR_TELEGRAM_API_TOKEN"
+API_TOKEN = "5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ"
 
 # Estructura de datos para almacenar eventos recurrentes y actividades pendientes
 eventos_recurrentes = {}
