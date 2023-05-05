@@ -140,7 +140,6 @@ def summary(update: Update, context: CallbackContext):
     else:
         update.message.reply_text("La lista de pedidos se mostrará a las 8:50 AM.")
 
-
 def main():
     updater = Updater(TOKEN_MENU, use_context=True)
 
