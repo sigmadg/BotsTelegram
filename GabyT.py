@@ -28,7 +28,6 @@ def set_task(update, context):
     # Confirmar la creación de la tarea
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"Tarea '{task}' creada para el {date}.")
 
-
 def show_tasks(update, context):
     # Obtener el diccionario de tareas del usuario
     task_dict = context.user_data
