@@ -1,1 +1,1 @@
-worker: python GabyT.py
+worker: GabyT.py
