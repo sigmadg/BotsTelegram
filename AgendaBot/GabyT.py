@@ -92,8 +92,8 @@ async def bot1_main():
 
     # Reemplaza los MessageHandler y CommandHandler con los filtros de aiogram
     dp.register_message_handler(on_start, Command("start"))
-    dp.register_message_handler(set_task, Text(eager=True, regexp=r'^\w+ \d{1,2}/\d{1,2}/\d{4}$'))
-    dp.register_message_handler(get_tasks, Text(eager=True, regexp=r'^\d{1,2}/\d{1,2}/\d{4}$'))
+    dp.register_message_handler(set_task, regexp=r'^\w+ \d{1,2}/\d{1,2}/\d{4}$')
+    dp.register_message_handler(get_tasks, regexp=r'^\d{1,2}/\d{1,2}/\d{4}$')
 
     # Iniciar el bot
     from aiogram import executor

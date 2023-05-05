@@ -161,16 +161,22 @@ async def summary(message: types.Message):
         await message.reply("La lista de pedidos se mostrará a las 8:50 AM.")
 
 
+
 async def on_startup(dp):
-    await bot.send_message(chat_id="@DesayunoGSBot", text="Bot has been started")
+    await bot.send_message(chat_id="@yourchannelusername", text="Bot has been started")
 
 
 async def on_shutdown(dp):
-    await bot.send_message(chat_id="@DesayunoGSBot", text="Bot has been stopped")
+    await bot.send_message(chat_id="@yourchannelusername", text="Bot has been stopped")
+
+
 
 async def bot2_main():
     dp.register_message_handler(start, commands=["start"])
     dp.register_message_handler(summary, commands=["summary"])
     dp.register_callback_query_handler(button_callback)
 
-    await dp.start_polling(on_startup=on_startup, on_shutdown=on_shutdown)
+   # await dp.start_polling(on_startup=on_startup, on_shutdown=on_shutdown)
+
+
+
