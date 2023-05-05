@@ -1,6 +1,8 @@
+import telegram
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import datetime
 import json
+import time
 
 TOKEN = '5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ'
 
@@ -54,6 +56,20 @@ def get_tasks(update, context):
     else:
         task_str = "\n".join([f"- {task}" for task in task_list])
         context.bot.send_message(chat_id=update.effective_chat.id, text=f"Tareas para el {date}:\n{task_str}")
+
+def send_daily_agenda(context):
+    # Obtener la fecha actual
+    today = datetime.date.today()
+
+    # Obtener la lista de tareas para hoy
+    task_list = context.user_data.get(str(today), [])
+
+    # Si hay tareas para hoy, enviar un mensaje con la lista de tareas a las 6 am
+    if task_list:
+        task_str = "\n".join([f"- {task}" for task in task_list])
+        context.bot.send_message(chat_id='5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ', text=f"Tareas para el {today}:\n{task_str}")
+    else:
+        context.bot.send_message(chat_id='5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ', text=f"No hay tareas para el {today}.")
 
 def main():
     # Crear un objeto de actualización y un objeto de despachador
