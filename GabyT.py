@@ -1,4 +1,3 @@
-import telegram
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import datetime
 import json
@@ -72,4 +71,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
