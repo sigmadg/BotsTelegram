@@ -1,90 +1,105 @@
-import telegram
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import datetime
 import json
-import time
+import asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 TOKEN = '5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ'
 
-def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Hola, ¿en qué puedo ayudarte?")
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot)
+dp.middleware.setup(LoggingMiddleware())
 
-def set_task(update, context):
+async def on_start(message: types.Message):
+    await bot.send_message(chat_id=message.chat.id, text="Hola, ¿en qué puedo ayudarte?")
+
+async def set_task(message: types.Message):
     # Obtener la tarea y la fecha del mensaje del usuario
-    message = update.message.text
-    task, date = message.split(" ", 1)
+    text = message.text
+    task, date = text.split(" ", 1)
 
     # Convertir la fecha en un objeto datetime
     date = datetime.datetime.strptime(date, '%d/%m/%Y').date()
 
+    # Crear user_data en caso de que no exista
+    if not hasattr(message, "user_data"):
+        message.user_data = {}
+
     # Obtener la lista de tareas existentes para esta fecha
-    task_list = context.user_data.get(str(date), [])
+    task_list = message.user_data.get(str(date), [])
 
     # Agregar la nueva tarea a la lista
     task_list.append(task)
 
     # Actualizar el diccionario de tareas del usuario
-    context.user_data[str(date)] = task_list
+    message.user_data[str(date)] = task_list
 
     # Confirmar la creación de la tarea
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Tarea '{task}' creada para el {date}.")
+    await bot.send_message(chat_id=message.chat.id, text=f"Tarea '{task}' creada para el {date}.")
 
-def show_tasks(update, context):
+async def show_tasks(message: types.Message):
+    # Crear user_data en caso de que no exista
+    if not hasattr(message, "user_data"):
+        message.user_data = {}
+
     # Obtener el diccionario de tareas del usuario
-    task_dict = context.user_data
+    task_dict = message.user_data
 
     # Convertir el diccionario en una cadena JSON
     task_json = json.dumps(task_dict, indent=4)
 
     # Enviar la cadena JSON como un mensaje al usuario
-    context.bot.send_message(chat_id=update.effective_chat.id, text=task_json)    
+    await bot.send_message(chat_id=message.chat.id, text=task_json)
 
-def get_tasks(update, context):
+async def get_tasks(message: types.Message):
+    # Crear user_data en caso de que no exista
+    if not hasattr(message, "user_data"):
+        message.user_data = {}
+
     # Obtener la fecha del mensaje del usuario
-    date_str = update.message.text
+    date_str = message.text
 
     # Convertir la fecha en un objeto datetime
     date = datetime.datetime.strptime(date_str, '%d/%m/%Y').date()
 
     # Obtener la lista de tareas existentes para esta fecha
-    task_list = context.user_data.get(str(date), [])
+    task_list = message.user_data.get(str(date), [])
 
     # Si no hay tareas para esta fecha, mostrar un mensaje al usuario
     if not task_list:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=f"No hay tareas para el {date}.")
+        await bot.send_message(chat_id=message.chat.id, text=f"No hay tareas para el {date}.")
     # Si hay tareas para esta fecha, mostrar la lista de tareas al usuario
     else:
         task_str = "\n".join([f"- {task}" for task in task_list])
-        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Tareas para el {date}:\n{task_str}")
+        await bot.send_message(chat_id=message.chat.id, text=f"Tareas para el {date}:\n{task_str}")
 
-def send_daily_agenda(context):
+async def send_daily_agenda(user_data):
     # Obtener la fecha actual
     today = datetime.date.today()
 
     # Obtener la lista de tareas para hoy
-    task_list = context.user_data.get(str(today), [])
+    task_list = user_data.get(str(today), [])
 
     # Si hay tareas para hoy, enviar un mensaje con la lista de tareas a las 6 am
     if task_list:
         task_str = "\n".join([f"- {task}" for task in task_list])
-        context.bot.send_message(chat_id='5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ', text=f"Tareas para el {today}:\n{task_str}")
+        await bot.send_message(chat_id='5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ', text=f"Tareas para el {today}:\n{task_str}")
     else:
-        context.bot.send_message(chat_id='5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ', text=f"No hay tareas para el {today}.")
+        await bot.send_message(chat_id='5799434637:AAEeUVstwBaH02-Vv2J5O5uMSpaUHhkmBfQ', text=f"No hay tareas para el {today}.")
 
-def main():
-    # Crear un objeto de actualización y un objeto de despachador
-    updater = Updater(token=TOKEN, use_context=True)
-    dispatcher = updater.dispatcher
+async def bot1_main():
+    from aiogram.dispatcher.filters import Command, Text
 
-    # Agregar manejadores de comandos y mensajes
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(MessageHandler(Filters.regex(r'^\w+ \d{1,2}/\d{1,2}/\d{4}$'), set_task))
-    dispatcher.add_handler(MessageHandler(Filters.regex(r'^\d{1,2}/\d{1,2}/\d{4}$'), get_tasks))
+    # Reemplaza los MessageHandler y CommandHandler con los filtros de aiogram
+    dp.register_message_handler(on_start, Command("start"))
+    dp.register_message_handler(set_task, Text(eager=True, regexp=r'^\w+ \d{1,2}/\d{1,2}/\d{4}$'))
+    dp.register_message_handler(get_tasks, Text(eager=True, regexp=r'^\d{1,2}/\d{1,2}/\d{4}$'))
 
     # Iniciar el bot
-    updater.start_polling()
-    updater.idle()
+    from aiogram import executor
+    executor.start_polling(dp, skip_updates=True)
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(bot1_main())
+
     

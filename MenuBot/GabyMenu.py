@@ -1,23 +1,21 @@
 import datetime
 import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    CallbackQueryHandler,
-    CallbackContext,
-    MessageHandler,
-    Filters,
-)
+from aiogram import Bot, Dispatcher, types
+from aiogram.contrib.middlewares.logging import LoggingMiddleware
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils import executor
 
 TOKEN_MENU = "6039729307:AAEvZj0GHeRzyK9QMCtNU7IRLR-Cn_vZzTA"
 
 logging.basicConfig(level=logging.INFO)
 
+bot = Bot(token=TOKEN_MENU)
+dp = Dispatcher(bot)
+dp.middleware.setup(LoggingMiddleware())
+
 orders = {}
 
-
-def start(update: Update, context: CallbackContext):
+async def start(message: types.Message):
     keyboard = [
         [
             InlineKeyboardButton("Cuernito - $25", callback_data="Cuernito"),
@@ -32,7 +30,7 @@ def start(update: Update, context: CallbackContext):
             InlineKeyboardButton("Huevos Mexicana - $35", callback_data="Huevos_Mexicana"),
         ],
         [
-        InlineKeyboardButton("Huevos Salchichas - $35", callback_data="Huevos_Salchichas"),
+            InlineKeyboardButton("Huevos Salchichas - $35", callback_data="Huevos_Salchichas"),
         ],
         [
             InlineKeyboardButton("Torta Pechuga - $25", callback_data="Torta_Pechuga"),
@@ -60,19 +58,41 @@ def start(update: Update, context: CallbackContext):
         ],
     ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text("Por favor selecciona una opción:", reply_markup=reply_markup)
+    reply_markup = InlineKeyboardMarkup(row_width=2)
+    for row in keyboard:
+        reply_markup.add(*row)
+
+    await message.reply("Por favor selecciona una opción:", reply_markup=reply_markup)
 
 
-def button_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    user_id = query.from_user.id
-    item = query.data
+async def button_callback(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    item = callback_query.data
     if user_id not in orders:
-        orders[user_id] = {"Cuernito": 0, "Molletes": 0, "Chilaquiles_Pollo": 0, "Chilaquiles_Manchego": 0, "Huevos_Jamon": 0, "Huevos_Salchichas": 0, "Huevos_Mexicana": 0, "Torta_Pechuga": 0, "Torta_Chilaquiles": 0, "Torta_Salchicha": 0, "Torta_Huevos_Jamon": 0, "Torta_Huevos_Salchicha": 0, "Torta_Pierna": 0, "Cafe": 0, "Fruta": 0, "Agua_Litro": 0, "Agua_Medio": 0, "Panquesitos_Queso": 0, "Panquesitos_Oreo": 0}
+        orders[user_id] = {
+            "Cuernito": 0,
+            "Molletes": 0,
+            "Chilaquiles_Pollo": 0,
+            "Chilaquiles_Manchego": 0,
+            "Huevos_Jamon": 0,
+            "Huevos_Salchichas": 0,
+            "Huevos_Mexicana": 0,
+            "Torta_Pechuga": 0,
+            "Torta_Chilaquiles": 0,
+            "Torta_Salchicha": 0,
+            "Torta_Huevos_Jamon": 0,
+            "Torta_Huevos_Salchicha": 0,
+            "Torta_Pierna": 0,
+            "Cafe": 0,
+            "Fruta": 0,
+            "Agua_Litro": 0,
+            "Agua_Medio": 0,
+            "Panquesitos_Queso": 0,
+            "Panquesitos_Oreo": 0,
+        }
 
     orders[user_id][item] += 1
-    query.answer(f"Agregaste 1 {item}")
+    await callback_query.answer(f"Agregaste 1 {item}")
 
 
 def order_summary():
@@ -133,25 +153,24 @@ def order_summary():
     return summary
 
 
-def summary(update: Update, context: CallbackContext):
+async def summary(message: types.Message):
     current_time = datetime.datetime.now().time()
     if current_time >= datetime.time(8, 50):
-        update.message.reply_text(order_summary())
+        await message.reply(order_summary())
     else:
-        update.message.reply_text("La lista de pedidos se mostrará a las 8:50 AM.")
+        await message.reply("La lista de pedidos se mostrará a las 8:50 AM.")
 
 
-def main():
-    updater = Updater(TOKEN_MENU, use_context=True)
-
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("summary", summary))
-    dp.add_handler(CallbackQueryHandler(button_callback))
-
-    updater.start_polling()
-    updater.idle()
+async def on_startup(dp):
+    await bot.send_message(chat_id="@DesayunoGSBot", text="Bot has been started")
 
 
-if __name__ == "__main__":
-    main()
+async def on_shutdown(dp):
+    await bot.send_message(chat_id="@DesayunoGSBot", text="Bot has been stopped")
+
+async def bot2_main():
+    dp.register_message_handler(start, commands=["start"])
+    dp.register_message_handler(summary, commands=["summary"])
+    dp.register_callback_query_handler(button_callback)
+
+    await dp.start_polling(on_startup=on_startup, on_shutdown=on_shutdown)
