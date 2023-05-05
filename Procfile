@@ -1,2 +1,1 @@
-worker: python AgendaBot/GabyT.py
-worker: python MenuBot/GabyMenu.py
+worker: python main.py
